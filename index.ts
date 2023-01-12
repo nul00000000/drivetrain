@@ -1,9 +1,24 @@
-var Robot = (function () {
-    function Robot(divID) {
-        this.gas = 0;
-        this.turning = 0;
-        this.keyAxisX = 0;
-        this.keyAxisY = 0;
+// Classes
+
+class Robot {
+    x: number;
+    y: number;
+    dx: number;
+    dy: number;
+    a: number;
+    da: number;
+    wheelAngle: number;
+    div: HTMLDivElement;
+
+    //motor instructions
+    gas = 0;
+    turning = 0;
+
+    //info for wheel angle
+    keyAxisX = 0;
+    keyAxisY = 0;
+
+    constructor(divID: string) {
         this.x = 0;
         this.y = 0;
         this.dx = 0;
@@ -11,67 +26,67 @@ var Robot = (function () {
         this.a = 3.1415926 / 2;
         this.da = 0;
         this.wheelAngle = 0;
-        this.div = document.getElementById(divID);
+        this.div = document.getElementById(divID) as HTMLDivElement;
     }
-    Robot.prototype.keyDown = function (event) {
-        if (!event.repeat) {
-            if (event.code == "KeyW") {
+
+    keyDown(event: KeyboardEvent) {
+        if(!event.repeat) {
+            if(event.code == "KeyW") {
                 this.keyAxisY += 1;
             }
-            if (event.code == "KeyA") {
+            if(event.code == "KeyA") {
                 this.keyAxisX -= 1;
             }
-            if (event.code == "KeyS") {
+            if(event.code == "KeyS") {
                 this.keyAxisY -= 1;
             }
-            if (event.code == "KeyD") {
+            if(event.code == "KeyD") {
                 this.keyAxisX += 1;
             }
-            if (event.code == "ArrowLeft") {
+            if(event.code == "ArrowLeft") {
                 this.turning += 1;
             }
-            if (event.code == "ArrowRight") {
+            if(event.code == "ArrowRight") {
                 this.turning -= 1;
             }
         }
-    };
-    Robot.prototype.keyUp = function (event) {
-        if (!event.repeat) {
-            if (event.code == "KeyW") {
+    }
+
+    keyUp(event: KeyboardEvent) {
+        if(!event.repeat) {
+            if(event.code == "KeyW") {
                 this.keyAxisY -= 1;
             }
-            if (event.code == "KeyA") {
+            if(event.code == "KeyA") {
                 this.keyAxisX += 1;
             }
-            if (event.code == "KeyS") {
+            if(event.code == "KeyS") {
                 this.keyAxisY += 1;
             }
-            if (event.code == "KeyD") {
+            if(event.code == "KeyD") {
                 this.keyAxisX -= 1;
             }
-            if (event.code == "ArrowLeft") {
+            if(event.code == "ArrowLeft") {
                 this.turning -= 1;
             }
-            if (event.code == "ArrowRight") {
+            if(event.code == "ArrowRight") {
                 this.turning += 1;
             }
         }
-    };
-    Robot.prototype.update = function (delta) {
-        if (this.keyAxisX != 0 || this.keyAxisY != 0) {
+    }
+
+    update(delta: number) {
+        if(this.keyAxisX != 0 || this.keyAxisY != 0) {
             this.gas = 0.1;
-            if (this.keyAxisY == 0) {
+            if(this.keyAxisY == 0) {
                 this.wheelAngle = -this.keyAxisX * 3.1415926 / 2;
-            }
-            else if (this.keyAxisX == 0) {
+            } else if (this.keyAxisX == 0) {
                 this.wheelAngle = (1 - this.keyAxisY) / 2 * 3.1415926;
-            }
-            else {
+            } else {
                 this.wheelAngle = -this.keyAxisX * 3.1415926 / 2;
-                if (this.keyAxisY == 1) {
+                if(this.keyAxisY == 1) {
                     this.wheelAngle *= 0.5;
-                }
-                else {
+                } else {
                     this.wheelAngle *= 1.5;
                 }
             }
@@ -80,28 +95,39 @@ var Robot = (function () {
             this.dy += 0.3 * this.gas * delta * Math.sin(this.a + this.wheelAngle);
         }
         this.da += this.turning * 0.4 * delta;
+
         this.dx *= 0.9;
         this.dy *= 0.9;
         this.da *= 0.9;
+
         this.x += this.dx;
         this.y += this.dy;
         this.a += this.da;
+
         this.div.style.left = ((this.x + 1) * 50) + "vw";
         this.div.style.bottom = ((this.y + 1) * 50 - 35) + "vw";
         this.div.style.transform = "translate(-50%, -50%) rotate(" + (-this.a * 180 / 3.1415926) + "deg)";
-    };
-    return Robot;
-}());
-var robot;
-var lastTime = 0;
+    }
+}
+
+//Global Variables
+
+let robot: Robot;
+let lastTime = 0;
+
+//Code
+
 function onLoad() {
     robot = new Robot("robot");
-    document.addEventListener("keydown", function (event) { return robot.keyDown(event); });
-    document.addEventListener("keyup", function (event) { return robot.keyUp(event); });
+    document.addEventListener("keydown", (event: KeyboardEvent) => robot.keyDown(event));
+    document.addEventListener("keyup", (event: KeyboardEvent) => robot.keyUp(event));
+
     window.requestAnimationFrame(loop);
 }
-function loop(time) {
+
+function loop(time: number) {
     robot.update((time - lastTime) / 1000);
+
     lastTime = time;
     window.requestAnimationFrame(loop);
 }
