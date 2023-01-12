@@ -18,6 +18,9 @@ class Robot {
     keyAxisX = 0;
     keyAxisY = 0;
 
+    //gamepad stuff
+    gamepad: Gamepad = null;
+
     constructor(divID: string) {
         this.x = 0;
         this.y = 0;
@@ -27,6 +30,16 @@ class Robot {
         this.da = 0;
         this.wheelAngle = 0;
         this.div = document.getElementById(divID) as HTMLDivElement;
+    }
+
+    claimGamePad(event: GamepadEventInit) {
+        if(this.gamepad == null) {
+            this.gamepad = event.gamepad;
+        }
+    }
+
+    removeGamePad(event: GamepadEventInit) {
+        this.gamepad = null;
     }
 
     keyDown(event: KeyboardEvent) {
@@ -76,25 +89,35 @@ class Robot {
     }
 
     update(delta: number) {
-        if(this.keyAxisX != 0 || this.keyAxisY != 0) {
-            this.gas = 0.1;
-            if(this.keyAxisY == 0) {
-                this.wheelAngle = -this.keyAxisX * 3.1415926 / 2;
-            } else if (this.keyAxisX == 0) {
-                this.wheelAngle = (1 - this.keyAxisY) / 2 * 3.1415926;
-            } else {
-                this.wheelAngle = -this.keyAxisX * 3.1415926 / 2;
-                if(this.keyAxisY == 1) {
-                    this.wheelAngle *= 0.5;
+        this.gas = 0;
+        if(this.gamepad == null) {
+            if(this.keyAxisX != 0 || this.keyAxisY != 0) {
+                this.gas = 0.1;
+                if(this.keyAxisY == 0) {
+                    this.wheelAngle = -this.keyAxisX * 3.1415926 / 2;
+                } else if (this.keyAxisX == 0) {
+                    this.wheelAngle = (1 - this.keyAxisY) / 2 * 3.1415926;
                 } else {
-                    this.wheelAngle *= 1.5;
+                    this.wheelAngle = -this.keyAxisX * 3.1415926 / 2;
+                    if(this.keyAxisY == 1) {
+                        this.wheelAngle *= 0.5;
+                    } else {
+                        this.wheelAngle *= 1.5;
+                    }
                 }
             }
-            console.log(this.a);
-            this.dx += 0.3 * this.gas * delta * Math.cos(this.a + this.wheelAngle);
-            this.dy += 0.3 * this.gas * delta * Math.sin(this.a + this.wheelAngle);
+        } else {
+            let sx = this.gamepad.axes[1];
+            let sy = this.gamepad.axes[0];
+            this.wheelAngle = Math.atan2(-sy, -sx);
+            this.gas = (sx * sx + sy * sy) * 0.3;
+            this.turning = this.gamepad.axes[2];
         }
+
         this.da += this.turning * 0.4 * delta;
+
+        this.dx += 0.3 * this.gas * delta * Math.cos(this.a + this.wheelAngle);
+        this.dy += 0.3 * this.gas * delta * Math.sin(this.a + this.wheelAngle);
 
         this.dx *= 0.9;
         this.dy *= 0.9;
@@ -121,6 +144,8 @@ function onLoad() {
     robot = new Robot("robot");
     document.addEventListener("keydown", (event: KeyboardEvent) => robot.keyDown(event));
     document.addEventListener("keyup", (event: KeyboardEvent) => robot.keyUp(event));
+    window.addEventListener("gamepadconnected", (event: GamepadEventInit) => robot.claimGamePad(event));
+    window.addEventListener("gamepaddisconnected", (event: GamepadEventInit) => robot.removeGamePad(event));
 
     window.requestAnimationFrame(loop);
 }
